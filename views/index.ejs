@@ -32,48 +32,72 @@
         <v-main>
           <v-container>
             <v-row>
-              <v-col cols="12" md="6" lg="4">
-                <v-card>
+              <v-col cols="12" md="4">
+                <v-card outlined>
+                  <v-card-title> TODOを追加 </v-card-title>
+                  <v-divider></v-divider>
                   <v-card-text>
-                    あいうえお
+                    <v-text-field
+                      v-model="inputTitle"
+                      outlined
+                      dense
+                      hide-details="auto"
+                      label="タイトル"
+                    ></v-text-field>
+                    <v-textarea
+                      v-model="inputContents"
+                      outlined
+                      dense
+                      hide-details="auto"
+                      label="内容"
+                      class="mt-3 mb-3"
+                    ></v-textarea>
+                    <div class="text-right">
+                      <v-btn color="primary" @click="addTodo()">
+                        <v-icon left>mdi-plus</v-icon>
+                        追加
+                      </v-btn>
+                    </div>
                   </v-card-text>
                 </v-card>
               </v-col>
-              <v-col cols="12" md="6" lg="4">
-                <v-card>
-                  <v-card-text>
-                    かきくけこ
-                  </v-card-text>
-                </v-card>
-              </v-col>
-              <v-col cols="12" md="6" lg="4">
-                <v-card>
-                  <v-card-text>
-                    さしすせそ
-                  </v-card-text>
-                </v-card>
-              </v-col>
-            </v-row>
-            <v-row>
-              <v-col cols="12" md="6" lg="4">
-                <v-card>
-                  <v-card-text>
-                    あいうえお
-                  </v-card-text>
-                </v-card>
-              </v-col>
-              <v-col cols="12" md="6" lg="4">
-                <v-card>
-                  <v-card-text>
-                    かきくけこ
-                  </v-card-text>
-                </v-card>
-              </v-col>
-              <v-col cols="12" md="6" lg="4">
-                <v-card>
-                  <v-card-text>
-                    さしすせそ
-                  </v-card-text>
+              <v-col cols="12" md="8">
+                <v-card outlined>
+                  <v-card-title> TODOリスト </v-card-title>
+                  <div v-if="todoList.length==0">
+                    <v-divider></v-divider>
+                    <v-card-text> TODOがありません </v-card-text>
+                  </div>
+                  <div v-for="(item, index) in todoList">
+                    <v-divider></v-divider>
+                    <v-card-text>
+                      <v-row>
+                        <v-checkbox
+                          v-model="item.done"
+                          dense
+                          hide-details="auto"
+                          class="ma-0 pa-0"
+                        ></v-checkbox>
+                        <div class="align-self-center">
+                          <div>
+                            {{ item.title }}
+                          </div>
+                          <div>
+                            <small>
+                              {{ item.contents }}
+                            </small>
+                          </div>
+                        </div>
+                        <v-spacer></v-spacer>
+                        <div class="align-self-center">
+                          <v-btn color="error" @click="deleteTodo(index)" small>
+                            <v-icon left small>mdi-delete</v-icon>
+                            削除
+                          </v-btn>
+                        </div>
+                      </v-row>
+                    </v-card-text>
+                  </div>
                 </v-card>
               </v-col>
             </v-row>
@@ -92,14 +116,54 @@
         data() {
           return {
             message: "Hello Vue!",
+            inputTitle: "",
+            inputContents: "",
+            todoList: [
+              //{ title: "", contents: "二個", done: false },
+              //{ title: "みかんを買う", contents: "三個", done: true },
+            ],
           };
         },
+        watch:{
+          todoList:{
+            deep: true,
+            handler(){
+              sessionStorage.setItem("TODO_DATA", JSON.stringify(this.todoList))
+            }
+          },
+        },
         mounted() {
-          this.message = "Hello";
+          try{
+            const todoData = sessionStorage.getItem("TODO_DATA");
+            const todoListTemp = JSON.parse(todoData);
+            if(todoListTemp){
+              this.$set(this, "todoList", todoListTemp);
+            }
+          }
+          catch(err){
+            console.error(err);
+          }
         },
         methods: {
-          test1() {
-            this.message = "やっほー";
+          addTodo() {
+            console.log(this.inputTitle);
+            console.log(this.inputContents);
+            if (!this.inputTitle) return;
+            this.todoList.push({
+              title: this.inputTitle,
+              contents: this.inputContents,
+              done: false,
+            });
+            this.inputTitle = "";
+            this.inputContents = "";
+          },
+          deleteTodo(index) {
+            if (!this.todoList[index].done) {
+              if (!window.confirm("完了していませんが削除して良いですか")) {
+                return;
+              }
+            }
+            this.todoList.splice(index, 1);
           },
         },
       });
